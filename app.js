@@ -6,8 +6,8 @@ const app = express();
 app.use(express.json());
 
 app.get("/", (_req, res) => {
-  console.log("Root endpoint hit");
-  res.json({ message: "Welcome to the Express Todo API" });
+  console.log("someone hit the root endpoint");
+  res.json({ message: "Welcome to the Enhanced Express Todo App!" });
 });
 
 app.use("/todos", todoRouter);
