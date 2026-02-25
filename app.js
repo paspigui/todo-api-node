@@ -6,16 +6,13 @@ const app = express();
 app.use(express.json());
 
 app.get("/", (_req, res) => {
-  console.log("someone hit the root endpoint");
   res.json({ message: "Welcome to the Enhanced Express Todo App!" });
 });
 
-app.use("/todos", todoRouter);
-
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+app.get("/health", (_req, res) => {
+  res.status(200).json({ status: "UP" });
 });
+
+app.use("/todos", todoRouter);
 
 module.exports = app;
