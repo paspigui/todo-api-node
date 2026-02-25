@@ -15,7 +15,6 @@ export default defineConfig([
     },
   },
   {
-    // Règles spécifiques pour les tests Jest
     files: ["tests/**/*.js"],
     languageOptions: {
       globals: {
