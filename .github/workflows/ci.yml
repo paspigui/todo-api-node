@@ -29,6 +29,9 @@ jobs:
       - name: Run Security Audit
         run: docker run --rm todo-api npm audit
 
+      - name: Run tests
+        run: docker run --rm todo-api npm test
+
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
