@@ -30,7 +30,19 @@ jobs:
         run: docker run --rm todo-api npm audit
 
       - name: Run tests
-        run: docker run --rm -v ${{ github.workspace }}:/app todo-api npm run test
+        run: docker run --rm -v ${{ github.workspace }}/coverage:/app/coverage todo-api npm run test
+
+      - name: Verify coverage file
+        run: |
+          echo "Listing coverage folder:"
+          ls -la coverage || echo "coverage folder missing"
+          if [ -f coverage/lcov.info ]; then
+            echo "lcov.info exists ✅"
+            head -n 5 coverage/lcov.info
+          else
+            echo "lcov.info NOT found ❌"
+            exit 1
+          fi
 
       - name: Upload coverage report
         if: always()
