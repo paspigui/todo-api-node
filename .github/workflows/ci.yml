@@ -30,7 +30,21 @@ jobs:
         run: docker run --rm todo-api npm audit
 
       - name: Run tests
-        run: docker run --rm -v ${{ github.workspace }}/coverage:/app/coverage todo-api npm run test:ci
+        run: docker run --rm -v ${{ github.workspace }}/coverage:/app/coverage todo-api npm run test
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 2
+
+      - name: Download coverage artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: coverage-report
+          path: coverage/
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@fd88b7d7ccbaefd23d8f36f73b59db7a3d246602 # v6
