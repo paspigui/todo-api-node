@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "test": "jest --coverage",
+    "test:ci": "jest --coverage --runInBand",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier . --write",
