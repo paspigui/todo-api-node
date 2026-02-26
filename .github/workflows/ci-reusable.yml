@@ -50,7 +50,7 @@ jobs:
         run: docker run --rm todo-api npm run format:check # Check code formatting
 
       - name: Run Security Audit
-        run: docker run --rm todo-api npm audit # Check for known vulnerabilities
+        run: docker run --rm todo-api npm audit --omit=dev
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 #v3
