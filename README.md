@@ -1,52 +1,112 @@
 # Todo API
 
-Une API REST pour gérer des todos, construite avec Node.js, Express et SQLite.
+API REST pour gérer des tâches (todos), construite avec Node.js, Express et SQLite (via `sql.js`).
 
----
+## Fonctionnalités
 
-## 🛠 Stack
+- CRUD complet sur les todos
+- Recherche par titre (`/todos/search/all?q=...`)
+- Pagination simple (`skip`, `limit`)
+- Endpoint de santé (`/health`)
+- Documentation Swagger UI
 
-- **Runtime** : Node.js 18/20
-- **Framework** : Express.js
-- **Base de données** : SQLite (via sql.js)
-- **Documentation** : Swagger UI (`/docs`)
-- **CI/CD** : GitHub Actions → GHCR → Vercel
+## Stack technique
 
----
+- Runtime: Node.js
+- Framework: Express
+- Base de données: SQLite (`sql.js`, fichier local `todo.db`)
+- Tests: Jest + Supertest
+- Qualité: ESLint + Prettier
 
-## ⚙️ Setup
+## Installation locale
 
-### Prérequis
+Prérequis:
 
-- [Node.js](https://nodejs.org/) >= 18
-- [pnpm](https://pnpm.io/) >= 9 (`npm install -g pnpm`)
+- Node.js 18+
+- npm
 
-### Installation locale
+Commandes:
 
 ```bash
-# 1. Cloner le repo
-git clone https://github.com/<ton-org>/<ton-repo>.git
-cd <ton-repo>
-
-# 2. Installer les dépendances
-pnpm install
-
-# 3. Copier le fichier d'environnement
-cp .env.example .env
-# Modifier .env si nécessaire
-
-# 4. Lancer le serveur en dev
-pnpm dev
-## API documentation
-
-Swagger UI is available at:
-Le serveur écoute sur http://localhost:3000
-La documentation Swagger est disponible sur http://localhost:3000/api-docs
-
+npm install
+npm start
 ```
 
----
+Serveur local: `http://localhost:3000`
 
-[![CI](https://github.com/paspigui/todo-api-node/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/paspigui/todo-api-node/actions/workflows/ci.yml)  
+## Variables d’environnement
+
+Variables supportées actuellement:
+
+- `PORT` (optionnelle): port HTTP du serveur. Valeur par défaut: `3000`
+
+Exemple:
+
+```bash
+PORT=4000 npm start
+```
+
+## Documentation API (Swagger)
+
+- Swagger UI: `http://localhost:3000/api-docs`
+
+## Endpoints principaux
+
+| Méthode | Endpoint                  | Description                       |
+| ------- | ------------------------- | --------------------------------- |
+| GET     | `/`                       | Message de bienvenue              |
+| GET     | `/health`                 | Vérifie l’état du service         |
+| GET     | `/todos`                  | Liste des todos (`skip`, `limit`) |
+| POST    | `/todos`                  | Crée un todo                      |
+| GET     | `/todos/:id`              | Récupère un todo par id           |
+| PUT     | `/todos/:id`              | Met à jour un todo                |
+| DELETE  | `/todos/:id`              | Supprime un todo                  |
+| GET     | `/todos/search/all?q=...` | Recherche des todos par titre     |
+
+## Structure du projet
+
+```text
+todo-api-node/
+├── app.js
+├── server.js
+├── swagger.js
+├── Dockerfile
+├── package.json
+├── database/
+│   └── database.js
+├── routes/
+│   └── todo.js
+└── tests/
+	└── todo.test.js
+```
+
+## Docker
+
+Build de l’image:
+
+```bash
+docker build -t todo-api-node .
+```
+
+Lancement du conteneur:
+
+```bash
+docker run --rm -p 3000:3000 todo-api-node
+```
+
+Puis ouvrir:
+
+- API: `http://localhost:3000`
+- Swagger UI: `http://localhost:3000/api-docs`
+
+## Scripts npm
+
+- `npm start` : démarre le serveur
+- `npm test` : lance les tests avec coverage
+- `npm run lint` : vérifie le code avec ESLint
+- `npm run lint:fix` : corrige automatiquement les problèmes ESLint
+- `npm run format` : formate le code avec Prettier
+- `npm run format:check` : vérifie le formatage
+
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=paspigui_todo-api-node&metric=coverage)](https://sonarcloud.io/summary/new_code?id=paspigui_todo-api-node)
 [![Docker Image](https://ghcr.io/paspigui/todo-api-node:latest)](https://github.com/paspigui/todo-api-node/pkgs/container/todo-api-node)
