@@ -121,14 +121,14 @@ docker run --rm -p 3000:3000 todo-api-node
 
 Liste rapide des endpoints exposés :
 
-- GET  /              — message racine
-- GET  /health        — état du service
-- GET  /todos         — liste des todos (query: `skip`, `limit`)
-- POST /todos         — crée un todo
-- GET  /todos/:id     — récupère un todo par id
-- PUT  /todos/:id     — met à jour un todo
-- DELETE /todos/:id   — supprime un todo
-- GET  /todos/search/all?q=... — recherche par titre
+- GET / — message racine
+- GET /health — état du service
+- GET /todos — liste des todos (query: `skip`, `limit`)
+- POST /todos — crée un todo
+- GET /todos/:id — récupère un todo par id
+- PUT /todos/:id — met à jour un todo
+- DELETE /todos/:id — supprime un todo
+- GET /todos/search/all?q=... — recherche par titre
 
 Consulte `routes/todo.js` pour la logique exacte et les paramètres acceptés.
 
