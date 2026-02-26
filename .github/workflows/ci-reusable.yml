@@ -11,6 +11,11 @@ on:
         required: false
         type: boolean
         default: true # Optionally skip smoke test when calling this workflow
+    secrets:
+      SONAR_TOKEN:
+        required: true
+      DISCORD_WEBHOOK_URL:
+        required: true
 
 jobs:
   # --- Build Docker Image & Lint/Check ---
