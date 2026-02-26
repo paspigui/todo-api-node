@@ -13,9 +13,30 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        node-version: [18, 20]
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
 
       - name: Build Docker image
         run: docker build -t todo-api .
@@ -58,3 +79,24 @@ jobs:
 
       - name: Push Docker image
         run: docker push ghcr.io/${{ github.repository }}:latest
+
+      - name: Smoke test API
+        run: |
+          echo "Running smoke test..."
+          STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/health || echo "000")
+          if [ "$STATUS_CODE" != "200" ]; then
+            echo "Smoke test failed! Status code: $STATUS_CODE"
+            exit 1
+          fi
+          echo "Smoke test passed! Status code: $STATUS_CODE"
+
+      - name: Discord Webhook
+        if: always()
+        uses: Ilshidur/action-discord@v2
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          message: |
+            Build ${{ github.workflow }} #${{ github.run_number }} finished
+            Status: ${{ job.status }}
+            Repository: ${{ github.repository }}
+            Branch: ${{ github.ref_name }}
