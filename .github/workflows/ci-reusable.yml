@@ -40,6 +40,9 @@ jobs:
       - name: Build Docker image
         run: docker build -t todo-api . # Build the Docker image locally
 
+      - name: Validate OpenAPI contract
+        run: docker run --rm todo-api npm run openapi:lint
+
       - name: Run ESLint
         run: docker run --rm todo-api npm run lint # Lint code inside container
 
