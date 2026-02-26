@@ -1,5 +1,7 @@
 const express = require("express");
+const swaggerUi = require("swagger-ui-express");
 const todoRouter = require("./routes/todo");
+const swaggerSpec = require("./swagger");
 
 const app = express();
 
@@ -12,6 +14,8 @@ app.get("/", (_req, res) => {
 app.get("/health", (_req, res) => {
   res.status(200).json({ status: "UP" });
 });
+
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use("/todos", todoRouter);
 
