@@ -11,3 +11,6 @@ jobs:
     with:
       node-version: 20
       run-smoke-test: true
+    secrets:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
