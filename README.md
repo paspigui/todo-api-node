@@ -109,3 +109,4 @@ Puis ouvrir:
 - `npm run format:check` : vérifie le formatage
 
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=paspigui_todo-api-node&metric=coverage)](https://sonarcloud.io/summary/new_code?id=paspigui_todo-api-node)
+[![Docker Image](https://ghcr.io/paspigui/todo-api-node:latest)](https://github.com/paspigui/todo-api-node/pkgs/container/todo-api-node)
