@@ -2,6 +2,16 @@
 
 API REST pour gérer des tâches (todos), construite avec Node.js, Express et SQLite (via `sql.js`).
 
+## Démarrage rapide
+
+```bash
+npm install
+npm start
+```
+
+- API: `http://localhost:3000`
+- Swagger UI: `http://localhost:3000/api-docs`
+
 ## Fonctionnalités
 
 - CRUD complet sur les todos
@@ -34,6 +44,48 @@ npm start
 
 Serveur local: `http://localhost:3000`
 
+## Utilisation rapide (curl)
+
+Créer un todo:
+
+```bash
+curl -X POST http://localhost:3000/todos \
+	-H "Content-Type: application/json" \
+	-d '{"title":"Buy milk","description":"2L","status":"pending"}'
+```
+
+Lister les todos (pagination):
+
+```bash
+curl "http://localhost:3000/todos?skip=0&limit=10"
+```
+
+Récupérer un todo:
+
+```bash
+curl http://localhost:3000/todos/1
+```
+
+Mettre à jour un todo:
+
+```bash
+curl -X PUT http://localhost:3000/todos/1 \
+	-H "Content-Type: application/json" \
+	-d '{"status":"done"}'
+```
+
+Supprimer un todo:
+
+```bash
+curl -X DELETE http://localhost:3000/todos/1
+```
+
+Recherche:
+
+```bash
+curl "http://localhost:3000/todos/search/all?q=milk"
+```
+
 ## Variables d’environnement
 
 Variables supportées actuellement:
@@ -62,6 +114,27 @@ PORT=4000 npm start
 | PUT     | `/todos/:id`              | Met à jour un todo                |
 | DELETE  | `/todos/:id`              | Supprime un todo                  |
 | GET     | `/todos/search/all?q=...` | Recherche des todos par titre     |
+
+## Modèle de données
+
+### Todo
+
+```json
+{
+  "id": 1,
+  "title": "Buy milk",
+  "description": "2L",
+  "status": "pending"
+}
+```
+
+### Erreurs
+
+```json
+{
+  "detail": "Todo not found"
+}
+```
 
 ## Structure du projet
 
@@ -99,6 +172,12 @@ Puis ouvrir:
 - API: `http://localhost:3000`
 - Swagger UI: `http://localhost:3000/api-docs`
 
+## Persistance des données
+
+- La base SQLite est stockée dans le fichier local `todo.db`.
+- En exécution Docker, les données restent dans le conteneur tant qu’il existe.
+- Pour conserver les données entre redémarrages de conteneur, montez un volume vers `/app`.
+
 ## Scripts npm
 
 - `npm start` : démarre le serveur
@@ -107,5 +186,10 @@ Puis ouvrir:
 - `npm run lint:fix` : corrige automatiquement les problèmes ESLint
 - `npm run format` : formate le code avec Prettier
 - `npm run format:check` : vérifie le formatage
+
+## Qualité & CI
+
+- Les tests sont dans `tests/todo.test.js`.
+- Le pipeline CI exécute build, lint, format check, audit sécurité et tests.
 
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=paspigui_todo-api-node&metric=coverage)](https://sonarcloud.io/summary/new_code?id=paspigui_todo-api-node)
