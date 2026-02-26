@@ -13,6 +13,48 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Docker image
+        run: docker build -t todo-api .
+
+      - name: Run ESLint
+        run: docker run --rm todo-api npm run lint
+
+      - name: Check Prettier formatting
+        run: docker run --rm todo-api npm run format:check
+
+      - name: Run Security Audit
+        run: docker run --rm todo-api npm audit
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Tag Docker image
+        run: docker tag todo-api ghcr.io/${{ github.repository }}:latest
+
+      - name: Push Docker image
+        run: docker push ghcr.io/${{ github.repository }}:latest
+
+  test:
+    runs-on: ubuntu-latest
+    needs: build
+
     strategy:
       matrix:
         node-version: [18, 20]
@@ -29,57 +71,37 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-      
-      - name: Cache node modules
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
 
-      - name: Build Docker image
-        run: docker build -t todo-api .
-
-      - name: Run ESLint
-        run: docker run --rm todo-api npm run lint
-
-      - name: Check Prettier formatting
-        run: docker run --rm todo-api npm run format:check
-
-      - name: Run Security Audit
-        run: docker run --rm todo-api npm audit
-
-      - name: Run tests
-        run: docker run --rm -v ${{ github.workspace }}/coverage:/app/coverage todo-api npm run test
+      - name: Run tests & generate coverage
+        run: docker run --rm -v ${{ github.workspace }}/coverage:/app/coverage todo-api npm test
 
       - name: Upload coverage report
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: coverage/
           retention-days: 2
 
+  sonar:
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: SonarCloud Scan
-        uses: SonarSource/sonarqube-scan-action@fd88b7d7ccbaefd23d8f36f73b59db7a3d246602 # v6
+        uses: SonarSource/sonarqube-scan-action@v6
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+  smoke_and_notify:
+    runs-on: ubuntu-latest
+    needs: [build, test]
 
-      - name: Tag Docker image
-        run: docker tag todo-api ghcr.io/${{ github.repository }}:latest
-
-      - name: Push Docker image
-        run: docker push ghcr.io/${{ github.repository }}:latest
-
+    steps:
       - name: Smoke test API
         run: |
           echo "Running smoke test..."
@@ -96,7 +118,7 @@ jobs:
         with:
           webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
           message: |
-            Build ${{ github.workflow }} #${{ github.run_number }} finished
+            CI run ${{ github.workflow }} #${{ github.run_number }} finished
             Status: ${{ job.status }}
             Repository: ${{ github.repository }}
             Branch: ${{ github.ref_name }}
