@@ -1,0 +1,138 @@
+name: CI Reusable
+
+on:
+  workflow_call:
+    # Inputs for the reusable workflow
+    inputs:
+      node-version:
+        required: true
+        type: string # Node version to use in this workflow
+      run-smoke-test:
+        required: false
+        type: boolean
+        default: true # Optionally skip smoke test when calling this workflow
+    secrets:
+      SONAR_TOKEN:
+        required: true
+      DISCORD_WEBHOOK_URL:
+        required: true
+
+jobs:
+  # --- Build Docker Image & Lint/Check ---
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # Read access for repo contents
+      packages: write # Write access for GHCR (push docker images)
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4 # Get repo code
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs['node-version'] }} # Use input Node version
+          cache: "npm" # Enable npm caching to speed up installs
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts # Clean install of dependencies
+
+      - name: Build Docker image
+        run: docker build -t todo-api . # Build the Docker image locally
+
+      - name: Run ESLint
+        run: docker run --rm todo-api npm run lint # Lint code inside container
+
+      - name: Check Prettier formatting
+        run: docker run --rm todo-api npm run format:check # Check code formatting
+
+      - name: Run Security Audit
+        run: docker run --rm todo-api npm audit # Check for known vulnerabilities
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 #v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }} # Authenticate to push image
+
+      - name: Tag Docker image
+        run: docker tag todo-api ghcr.io/${{ github.repository }}:latest # Tag image for GHCR
+
+      - name: Push Docker image
+        run: docker push ghcr.io/${{ github.repository }}:latest # Push to GHCR
+
+  # --- Test with Multiple Node Versions ---
+  test:
+    runs-on: ubuntu-latest
+    needs: build # Depends on build job
+    strategy:
+      matrix:
+        node-version: [18, 20] # Test against multiple Node versions
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }} # Use matrix Node version
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Run tests & generate coverage
+        run: npm test # Run tests and generate coverage report
+
+      - name: Upload coverage report
+        if: always() # Upload even if tests fail
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-${{ github.run_number }}-${{ matrix.node-version }}
+          path: coverage/
+          retention-days: 2 # Keep reports for 2 days
+
+  # --- SonarCloud Analysis + Optional Smoke Test ---
+  sonar:
+    runs-on: ubuntu-latest
+    needs: test # Depends on test job
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarqube-scan-action@fd88b7d7ccbaefd23d8f36f73b59db7a3d246602
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }} # Token for SonarCloud authentication
+
+      - name: Smoke test API (prod)
+        if: ${{ inputs['run-smoke-test'] }} # Only run if input is true
+        run: |
+          echo "Running smoke test against Vercel..."
+          STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://todo-api-node-phi.vercel.app/health || echo "000")
+          if [ "$STATUS_CODE" != "200" ]; then
+            echo "Smoke test failed! Status code: $STATUS_CODE"
+            exit 1
+          fi
+          echo "Smoke test passed! Status code: $STATUS_CODE"  # Checks production API health
+
+      - name: Discord Notification
+        if: always() # Always notify regardless of success/failure
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          curl -H "Content-Type: application/json" \
+              -X POST \
+              -d "{\"content\": \"Build ${{ github.workflow }} #${{ github.run_number }} finished. Status: ${{ job.status }}. Branch: ${{ github.ref_name }}\"}" \
+              $DISCORD_WEBHOOK_URL  # Sends notification to Discord
