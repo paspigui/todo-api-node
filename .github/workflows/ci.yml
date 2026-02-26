@@ -12,7 +12,6 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -38,7 +37,7 @@ jobs:
       - name: Run Security Audit
         run: docker run --rm todo-api npm audit
 
-      - name: Login to GHCR
+      - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -53,8 +52,6 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
-    needs: build
-
     strategy:
       matrix:
         node-version: [18, 20]
@@ -73,7 +70,7 @@ jobs:
         run: npm ci
 
       - name: Run tests & generate coverage
-        run: docker run --rm -v ${{ github.workspace }}/coverage:/app/coverage todo-api npm test
+        run: npm test
 
       - name: Upload coverage report
         if: always()
@@ -83,25 +80,12 @@ jobs:
           path: coverage/
           retention-days: 2
 
-  sonar:
-    runs-on: ubuntu-latest
-    needs: test
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@v6
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-  smoke_and_notify:
-    runs-on: ubuntu-latest
-    needs: [build, test]
-
-    steps:
       - name: Smoke test API
         run: |
           echo "Running smoke test..."
@@ -118,7 +102,7 @@ jobs:
         with:
           webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
           message: |
-            CI run ${{ github.workflow }} #${{ github.run_number }} finished
+            Build ${{ github.workflow }} #${{ github.run_number }} finished
             Status: ${{ job.status }}
             Repository: ${{ github.repository }}
             Branch: ${{ github.ref_name }}
