@@ -98,11 +98,8 @@ jobs:
 
       - name: Discord Webhook
         if: always()
-        uses: Ilshidur/action-discord@v1
-        with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          message: |
-            Build ${{ github.workflow }} #${{ github.run_number }} finished
-            Status: ${{ job.status }}
-            Repository: ${{ github.repository }}
-            Branch: ${{ github.ref_name }}
+        run: |
+          curl -H "Content-Type: application/json" \
+              -X POST \
+              -d "{\"content\": \"Build ${{ github.workflow }} #${{ github.run_number }} finished. Status: ${{ job.status }}. Branch: ${{ github.ref_name }}\"}" \
+              ${{ secrets.DISCORD_WEBHOOK_URL }}
