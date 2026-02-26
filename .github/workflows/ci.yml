@@ -23,7 +23,7 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Build Docker image
         run: docker build -t todo-api .
@@ -66,7 +66,7 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Run tests & generate coverage
         run: npm test
@@ -107,10 +107,12 @@ jobs:
           fi
           echo "Smoke test passed! Status code: $STATUS_CODE"
 
-      - name: Discord Webhook
+      - name: Discord Notification
         if: always()
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
           curl -H "Content-Type: application/json" \
               -X POST \
               -d "{\"content\": \"Build ${{ github.workflow }} #${{ github.run_number }} finished. Status: ${{ job.status }}. Branch: ${{ github.ref_name }}\"}" \
-              ${{ secrets.DISCORD_WEBHOOK_URL }}
+              $DISCORD_WEBHOOK_URL
