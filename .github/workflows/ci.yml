@@ -92,7 +92,7 @@ jobs:
           node-version: 20
 
       - name: Download coverage artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: coverage-report-${{ github.run_number }}-20
           path: coverage/
