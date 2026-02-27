@@ -171,4 +171,6 @@ todo-api-node/
 
 ## Contribution
 
-Ouvert aux PRs : fork, branche feature, tests, lint et PR. Respecte le style (Prettier/ESLint) et ajoute des tests pour les nouvelles fonctionnalités.
+[![CI](https://github.com/paspigui/todo-api-node/actions/workflows/ci-reusable.yml/badge.svg)](https://github.com/paspigui/todo-api-node/actions)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=paspigui_todo-api-node&metric=coverage)](https://sonarcloud.io/summary/new_code?id=paspigui_todo-api-node)
+[![Docker Image](https://ghcr.io/paspigui/todo-api-node:latest)](https://github.com/paspigui/todo-api-node/pkgs/container/todo-api-node)
